@@ -1,0 +1,40 @@
+
+services:
+  publisher:
+    image: postgres:17
+    container_name: pg-publisher
+    environment:
+      POSTGRES_USER: replicator
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: demo
+    volumes:
+      - ./publisher/data:/var/lib/postgresql/data
+      - ./publisher/conf:/etc/postgresql
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    command: 
+      -c "wal_level=logical"
+      -c "max_wal_senders=10"
+      -c "max_replication_slots=10"
+
+  subscriber:
+    image: postgres:17
+    container_name: pg-subscriber
+    environment:
+      POSTGRES_USER: replicator
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: demo
+    volumes:
+      - ./subscriber/data:/var/lib/postgresql/data
+      - ./subscriber/conf:/etc/postgresql
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    ports:
+      - "5433:5432"
+    command: 
+      -c "wal_level=logical"
+      -c "max_wal_senders=10"
+      -c "max_replication_slots=10"
+    depends_on:
+      - publisher
+
